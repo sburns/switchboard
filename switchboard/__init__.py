@@ -6,6 +6,7 @@
 """
 __author__ = 'Scott Burns <scott.s.burns@vanderbilt.edu>'
 __copyright__ = 'Copyright 2012 Vanderbilt University. All Rights Reserved'
+__version__ = '0.1'
 
 from .operator import Operator
 from .switchboard import switchboard
