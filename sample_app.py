@@ -1,19 +1,17 @@
 from flask import Flask
-from switchboard import Switchboard
+from switchboard import Switchboard, Workflow
 
 app = Flask(__name__)
 
 
-def echo(**kwargs):
-    print '\t'.join(['%s:%s' % (k, kwargs[k]) for k in sorted(kwargs.keys())])
+class TestWorkflow(Workflow):
+    pid, form, status = 17921, 'demographics', 2
+
+    def execute(self, trigger):
+        print "ah ha"
 
 
-receivers = [{'pid': 17921,
-              'status': [1, 2],
-              'form': ['demographics', 'imaging'],
-              'func': echo},
-            ]
-app.config['SWITCHBOARD'] = receivers
+app.config['SWITCHBOARD_WORKFLOWS'] = [TestWorkflow()]
 Switchboard(app)
 
 

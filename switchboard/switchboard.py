@@ -8,38 +8,35 @@ Main routing
 __author__ = 'Scott Burns <scott.s.burns@vanderbilt.edu>'
 __copyright__ = 'Copyright 2012 Vanderbilt University. All Rights Reserved'
 
-from flask import Blueprint, request, current_app, g
+from flask import Blueprint, request, current_app
 
-from .operator import Operator
+from .core import Operator, Trigger
 
 switchboard = Blueprint('switchboard', __name__)
-
-
-@switchboard.before_request
-def add_operator():
-    g.op = Operator(current_app.config.get('SWITCHBOARD', []))
 
 
 @switchboard.route('/', methods=['GET', 'POST'])
 def trigger():
     if request.method == 'POST':
-        data = extract(request.form)
-        g.op.connect(data)
+        op = Operator(current_app.config.get('SWITCHBOARD_WORKFLOWS', []))
+        trigger = trigger_from_form(request.form)
+        op.connect(trigger)
         return 'Thank you', 200
     if request.method == 'GET':
         return "I'm expecting a POST call, but this will have to do", 200
 
 
-def extract(form):
+def trigger_from_form(form):
     """ Logic for breaking down the POST form from redcap """
-    d = {}
-    d['pid'] = int(request.form.get('project_id', 0))
-    d['form'] = request.form.get('instrument', '')
-    d['record'] = request.form.get('record', '')
-    d['event'] = request.form.get('redcap_event_name', '')
-    d['dag'] = request.form.get('redcap_data_access_group', '')
-    d['status'] = int(request.form.get(comp_key(d['form']), 0))
-    return d
+    data = dict(
+                pid=int(form.get('project_id', 0)),
+                form=form.get('instrument', ''),
+                record=form.get('record', ''),
+                event=form.get('redcap_event_name', ''),
+                dag=form.get('redcap_data_access_group', ''),
+                )
+    data['status'] = int(form.get(comp_key(data['form']), 0))
+    return Trigger(**data)
 
 
 def comp_key(inst):

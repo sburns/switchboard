@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""" test_operator.py
+""" test_workflow.py
 
-Testing switchboard.operator
+Testing switchboard.core.workflow
 """
 __author__ = 'Scott Burns <scott.s.burns@vanderbilt.edu>'
 __copyright__ = 'Copyright 2012 Vanderbilt University. All Rights Reserved'
@@ -13,28 +13,32 @@ sys.path.insert(0, '..')
 
 from unittest import TestCase
 
-from switchboard.operator import Operator
+from switchboard import Workflow
+from switchboard.core import Trigger
 
 
-def dummy():
-    pass
+class Workflow1(Workflow):
+    pid = 1
+    form = 'demographics'
+    status = 2
 
-receivers = [{'pid': 1,
-              'form': 'demographics',
-              'status': 2,
-              'func': dummy,
-            },
-             {'pid': [1, 2, 3],
-              'form': ['demographics', 'imaging'],
-              'status': [1, 2],
-              'func': dummy,
-              }]
+    def execute(self):
+        pass
 
 
-class OperatorTest(TestCase):
+class Workflow2(Workflow):
+    pid = [1, 2, 3]
+    form = ['demographics', 'imaging']
+    status = [1, 2]
+
+    def execute(self):
+        pass
+
+
+class WorkflowTest(TestCase):
 
     def setUp(self):
-        self.op = Operator([])
+        pass
 
     def tearDown(self):
         pass
@@ -54,7 +58,7 @@ class OperatorTest(TestCase):
                    (['foo', 'bar'], 'bat', False)]
         for i, match_data in enumerate(matches):
             rec_val, trig_val, good_result = match_data
-            comp_result = self.op._matches(rec_val, trig_val)
+            comp_result = Workflow.match(rec_val, trig_val)
             msg = "Match failure:"
             if good_result:
                 msg += "(Should match but do not) "
@@ -64,13 +68,18 @@ class OperatorTest(TestCase):
             self.assertEqual(comp_result, good_result, msg)
 
     def test_filtering(self):
-        """Test filtering receivers from triggers"""
-        triggers = [(receivers[0], True, {'pid': 1, 'form': 'demographics', 'status': 2}),
-                    (receivers[0], False, {'pid': 2, 'form': 'demographics', 'status': 2}),
-                    (receivers[1], True, {'pid': 1, 'form': 'demographics', 'status': 2}),
-                    (receivers[1], True, {'pid': 2, 'form': 'demographics', 'status': 2}),
-                    (receivers[1], False, {'pid': 2, 'form': 'demographics', 'status': 0})]
+        """Test filtering workflows from triggers"""
+        wf1 = Workflow1()
+        wf2 = Workflow2()
+        t1 = Trigger(pid=1, form='demographics', status=2)
+        t2 = Trigger(pid=2, form='demographics', status=2)
+        t3 = Trigger(pid=2, form='demographics', status=0)
+        triggers = [(wf1, True, t1),
+                    (wf1, False, t2),
+                    (wf2, True, t1),
+                    (wf2, True, t2),
+                    (wf2, False, t3)]
         for i, trigger_data in enumerate(triggers):
-            rec, good_match, data = trigger_data
+            wf, good_match, trigger = trigger_data
             msg = "%d trigger failed" % i
-            self.assertEquals(good_match, self.op._filter(rec, **data), msg)
+            self.assertEquals(good_match, wf.does_match(trigger), msg)
