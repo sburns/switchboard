@@ -8,13 +8,23 @@ Packaging
 __author__ = 'Scott Burns <scott.s.burns@vanderbilt.edu>'
 __copyright__ = 'Copyright 2013 Vanderbilt University. All Rights Reserved'
 
-from switchboard import __version__ as VERSION
+import os
 from setuptools import setup, find_packages
+
+
+def get_version():
+    basedir = os.path.dirname(__file__)
+    with open(os.path.join(basedir, 'switchboard/version.py')) as f:
+        VERSION = None
+        exec(f.read())
+        return VERSION
+    raise RuntimeError('No version info found.')
+
 
 if __name__ == '__main__':
 
     setup(name='switchboard',
-          version=VERSION,
+          version=get_version(),
           description="A small flask blueprint for accepting and delegating"
                       "REDCap Data Entry Triggers",
           author="Scott S Burns",
